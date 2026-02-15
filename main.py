@@ -14,21 +14,23 @@ class MyPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
         self.config = config
-        self.qqid_list = set(config.qq_id)
-        self.prompt = config.prompt
-
-    async def initialize(self):
-        """可选择实现异步的插件初始化方法，当实例化该插件类之后会自动调用该方法。"""
+        
+        # 正确获取配置 + 防御性拷贝
+        qq_ids = config.get("qq_id", []) or []
+        self.qqid_list = set(str(qq_id).strip() for qq_id in qq_ids if qq_id)
+        self.prompt = config.get("prompt", "你是一个温柔的人")
 
     @filter.on_llm_request()
-    async def my_custom_hook_1(
-        self, event: AstrMessageEvent, req: ProviderRequest
-    ):  # 请注意有三个参数
-        if len(self.qqid_list) == 0:
+    async def my_custom_hook_1(self, event: AstrMessageEvent, req: ProviderRequest):
+        if not self.qqid_list or not self.prompt:
             return
-        if event.get_sender_id() in self.qqid_list:
+        
+        # 类型统一为字符串
+        sender_id = str(event.get_sender_id())
+        
+        if sender_id in self.qqid_list:
             req.system_prompt = self.prompt
+            logger.debug(f"已为 {sender_id} 应用特殊提示词")
 
     async def terminate(self):
-        """可选择实现异步的插件销毁方法，当插件被卸载/停用时会调用。"""
-        logger.info("插件已卸载")
+        logger.info("Prompt Router 插件已卸载")

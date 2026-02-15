@@ -30,7 +30,7 @@ class MyPlugin(Star):
         
         if sender_id in self.qqid_list:
             req.system_prompt = self.prompt
-            logger.debug(f"已为 {sender_id} 应用特殊提示词")
+            logger.info(f"已为 {sender_id} 应用特殊提示词")
 
     async def terminate(self):
         logger.info("Prompt Router 插件已卸载")
